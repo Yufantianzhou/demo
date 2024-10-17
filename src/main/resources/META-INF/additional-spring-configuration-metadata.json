@@ -1,0 +1,37 @@
+{"properties": [
+  {
+    "name": "mqtt.connection.timeout",
+    "type": "java.lang.String",
+    "description": "A description for 'mqtt.connection.timeout'"
+  },
+  {
+    "name": "mqtt.keep.alive.interval",
+    "type": "java.lang.String",
+    "description": "A description for 'mqtt.keep.alive.interval'"
+  },
+  {
+    "name": "mqtt.automatic.reconnect",
+    "type": "java.lang.String",
+    "description": "A description for 'mqtt.automatic.reconnect'"
+  },
+  {
+    "name": "mqtt.clean.session",
+    "type": "java.lang.String",
+    "description": "A description for 'mqtt.clean.session'"
+  },
+  {
+    "name": "mqtt.brokerUrl",
+    "type": "java.lang.String",
+    "description": "A description for 'mqtt.brokerUrl'"
+  },
+  {
+    "name": "mqtt.clientId",
+    "type": "java.lang.String",
+    "description": "A description for 'mqtt.clientId'"
+  },
+  {
+    "name": "mqtt.topic",
+    "type": "java.lang.String",
+    "description": "A description for 'mqtt.topic'"
+  }
+]}

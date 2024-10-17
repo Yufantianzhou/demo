@@ -7,6 +7,7 @@ import java.net.Socket;
 public class TcpStream {
     private static final int DEFAULT_TIMEOUT = 5000;
     private final Socket socket;
+    @SuppressWarnings("unused")
     private int timeout;
 
 

@@ -1,83 +1,102 @@
 package com.example.demo.service.mqtt;
 
-import jakarta.annotation.PostConstruct;
-import org.eclipse.paho.client.mqttv3.*;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
+
 /**
- * Mqtt服务
+ * MQTT 服务
  */
 @Service
 public class MqttClientService {
-    private static final String broker = "tcp://47.108.27.238:1883";
+
     private static final Logger log = LoggerFactory.getLogger(MqttClientService.class);
-    private static final String clientId = "wzy-host";
-    private final MqttConnectOptions options;
 
-    ApplicationEventPublisher publisher;
-    MqttClient client = null;
+    private final ApplicationEventPublisher publisher;
+    private final MqttClient client;
+    private final MqttConnectOptions mqttConnectOptions;
+    private final String topic;
 
-    MqttClientService(ApplicationEventPublisher publisher, MqttConnectOptions options) {
+    public MqttClientService(ApplicationEventPublisher publisher,
+            MqttClient client,
+            MqttConnectOptions mqttConnectOptions,
+            @Value("${mqtt.topic}") String topic) {
         this.publisher = publisher;
-        this.options = options;
+        this.client = client;
+        this.mqttConnectOptions = mqttConnectOptions;
+        this.topic = topic;
     }
 
     @PostConstruct
     void init() {
         try {
             connect();
+            client.subscribe(topic);
+            log.info("Subscribed to topic [{}].", topic);
         } catch (MqttException e) {
-            log.error(e.getMessage());
+            log.error("Failed to connect and subscribe: {}", e.getMessage());
         }
     }
 
-
-    public void connect() throws MqttException {
-        this.client = new MqttClient(broker, clientId, new MemoryPersistence());
-        client.setCallback(new Callback());
-        client.connect(options);
-        client.subscribe("host");
-        log.info("Connected to " + broker);
+    private void connect() throws MqttException {
+        if (!client.isConnected()) {
+            client.connect(mqttConnectOptions);
+            client.setCallback(new MqttCallbackHandler());
+            log.info("Connected to MQTT broker at {}", client.getCurrentServerURI());
+        } else {
+            log.info("Already connected to MQTT broker.");
+        }
     }
 
     public void disconnect() throws MqttException {
         if (client.isConnected()) {
             client.disconnect();
+            log.info("Disconnected from MQTT broker.");
+        } else {
+            log.warn("MQTT client is not connected, no action taken.");
         }
     }
 
     public void publish(String topic, String message) throws MqttException {
-        client.publish(topic, new MqttMessage(message.getBytes()));
+        if (client.isConnected()) {
+            client.publish(topic, new MqttMessage(message.getBytes()));
+            log.info("Published message to topic [{}]: {}", topic, message);
+        } else {
+            log.error("Cannot publish message, MQTT client is not connected.");
+        }
     }
 
-    class Callback implements MqttCallback, MqttCallbackExtended {
+    public class MqttCallbackHandler implements MqttCallbackExtended {
+
         @Override
         public void connectionLost(Throwable throwable) {
-            log.info("MqttClient Connection lost");
+            log.warn("MQTT Client connection lost: {}", throwable.getMessage());
         }
 
         @Override
-        public void messageArrived(String s, MqttMessage mqttMessage) {
-            log.info("MqttMessage received: {}", mqttMessage.toString());
+        public void messageArrived(String topic, MqttMessage mqttMessage) {
+            log.info("Message received from topic [{}]: {}", topic, mqttMessage.toString());
+            // 这里可以进行消息的进一步处理
         }
 
         @Override
         public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
-            log.info("Delivery complete");
+            log.info("Message delivery complete.");
         }
 
         @Override
-        public void connectComplete(boolean b, String s) {
-            try {
-                client.subscribe("host");
-                log.info("Reconnect and subscribe success");
-            } catch (MqttException e) {
-                log.error(e.getMessage());
-            }
+        public void connectComplete(boolean reconnect, String serverURI) {
+            log.info("MQTT client connected successfully (reconnect: {}): {},topic: {}", reconnect, serverURI, topic);
         }
     }
 }

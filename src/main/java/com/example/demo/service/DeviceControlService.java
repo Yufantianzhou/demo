@@ -1,14 +1,15 @@
 package com.example.demo.service;
 
-import com.example.demo.service.mqtt.MqttClientService;
-import com.example.demo.util.TcpStream;
+import java.io.IOException;
+
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+import com.example.demo.service.mqtt.MqttClientService;
+import com.example.demo.util.TcpStream;
 
 @Service
 public class DeviceControlService {
@@ -17,7 +18,7 @@ public class DeviceControlService {
     private static final int PORT = 45678;
 
     @Value("${using-tcp}")
-    private static boolean usingTcp;
+    private  boolean usingTcp;
 
     MqttClientService mqttClientService;
     DeviceDataService deviceDataService;

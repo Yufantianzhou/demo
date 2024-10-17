@@ -18,6 +18,7 @@ import com.example.demo.util.Result;
 
 @RestController
 public class DeviceController {
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(DeviceController.class);
 
     private final DeviceDataService deviceDataService;
